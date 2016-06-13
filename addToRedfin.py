@@ -38,17 +38,22 @@ def main():
             data["Median Income"] = pd.Series([""]*len(data.index), index=data.index)
             
             for h in data.index:
-                coord = [data.loc[h, "LATITUDE"], data.loc[h, "LONGITUDE"]]
-                schools = getSchools.getSchoolDistrict(coord, schoolData)
-                data.loc[h, "Elementary"] = schools['E']['name']
-                data.loc[h, "Middle"] = schools['M']['name']
-                data.loc[h, "High"] = schools['H']['name']
-                data.loc[h, "Elementary Rating"] = schools['E']['rating']
-                data.loc[h, "Middle Rating"] = schools['M']['rating']
-                data.loc[h, "High Rating"] = schools['H']['rating']
-                (tract, medianIncome) = getCensus.getCensusData(coord, censusData)
-                data.loc[h, "Census Tract"] = tract
-                data.loc[h, "Median Income"] = medianIncome
+                if (not pd.isnull(data.loc[h, "LATITUDE"])) and (not pd.isnull(data.loc[h, "LONGITUDE"])):
+                    try:                        
+                        coord = [float(data.loc[h, "LATITUDE"]), float(data.loc[h, "LONGITUDE"])]
+                        schools = getSchools.getSchoolDistrict(coord, schoolData)
+                        data.loc[h, "Elementary"] = schools['E']['name']
+                        data.loc[h, "Middle"] = schools['M']['name']
+                        data.loc[h, "High"] = schools['H']['name']
+                        data.loc[h, "Elementary Rating"] = schools['E']['rating']
+                        data.loc[h, "Middle Rating"] = schools['M']['rating']
+                        data.loc[h, "High Rating"] = schools['H']['rating']
+                    except:
+                        print(data.loc[h])
+                        return
+                    (tract, medianIncome) = getCensus.getCensusData(coord, censusData)
+                    data.loc[h, "Census Tract"] = tract
+                    data.loc[h, "Median Income"] = medianIncome
             
             newFile = re.sub(r'.csv', '_ext.csv', filename)
             data.to_csv("{}/{}".format(REDFIN_OUT_PATH, newFile), ignore_index=True)
