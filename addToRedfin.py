@@ -14,6 +14,8 @@ import pandas as pd
 import os
 import re
 import pickle
+import getSchools
+import getCensus
 
 REDFIN_SOURCE_PATH = './redfin_source'
 REDFIN_OUT_PATH = './redfin_data'

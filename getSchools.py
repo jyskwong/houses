@@ -19,20 +19,28 @@ def parseSchoolDistrictJSON(districtList):
     polygons = []
     for distrID in districtList:
         jsonfile = "mapdata/{}.json".format(distrID)
-        pathPoints = []
+        
         if os.path.isfile(jsonfile):
             with open(jsonfile) as jsondata:
                 distrBoundaries = json.load(jsondata)
                 if 'boundary' in distrBoundaries.keys():
-                    for (longit, lat) in distrBoundaries['boundary']['coordinates'][0][0]:
-                        pathPoints.append([lat, longit])
+                    for poly in distrBoundaries['boundary']['coordinates']:
+                        pathPoints = []
+                        for (longit, lat) in distrBoundaries['boundary']['coordinates'][0][0]:
+                            pathPoints.append([lat, longit])
+                        polygons.append(mplPath.Path(np.array(pathPoints)))
                 elif 'schools' in distrBoundaries.keys():
-                    for (longit, lat) in distrBoundaries['schools'][0]['coordinates']['coordinates'][0][0]:
-                        pathPoints.append([lat, longit])
+                    for poly in distrBoundaries['schools'][0]['coordinates']['coordinates']:
+                        pathPoints = []
+                        for (longit, lat) in poly[0]:
+                            pathPoints.append([lat, longit])
+                        polygons.append(mplPath.Path(np.array(pathPoints)))
                 else:
-                    for (longit, lat) in distrBoundaries['districts'][0]['coordinates']['coordinates'][0][0]:
-                        pathPoints.append([lat, longit])
-            polygons.append(mplPath.Path(np.array(pathPoints)))
+                    for poly in distrBoundaries['districts'][0]['coordinates']['coordinates']:
+                        pathPoints = []
+                        for (longit, lat) in poly[0]:
+                            pathPoints.append([lat, longit])
+                        polygons.append(mplPath.Path(np.array(pathPoints)))
         else:
             print("Can't find district map")
             polygons.append(mplPath.Path(np.array([[0, 0]])))
@@ -65,7 +73,9 @@ def getSchoolDistrict(coord, schoolData):
         schools[schoolType]['name'] = ""
         schools[schoolType]['rating'] = ""
         found = False
-        for name in schoolData[schoolType].keys():
+        s = schoolData[schoolType].keys()
+        s.sort()
+        for name in s:
             polygons = schoolData[schoolType][name]['boundary']
             for distr in polygons:
                 if distr.contains_point(coord):
