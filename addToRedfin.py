@@ -24,6 +24,7 @@ def main():
     #load school and census data
     schoolData = pickle.load(open('schoolData.p', 'rb'))
     censusData = pickle.load(open('censusData.p', 'rb'))
+    first = 1
     
     for filename in os.listdir(REDFIN_SOURCE_PATH):
         if re.search(r'.csv$', filename):
@@ -57,6 +58,13 @@ def main():
             
             newFile = re.sub(r'.csv', '_ext.csv', filename)
             data.to_csv("{}/{}".format(REDFIN_OUT_PATH, newFile), ignore_index=True)
+            if first:
+                allData = data
+                first = 0
+            else:
+                allData = allData.append(data, ignore_index=True)
+    allData = allData.drop_duplicates(["LISTING ID", "ADDRESS"])
+    pickle.dump(allData, open('saleData.p', "wb"))
     
     
 if __name__ == "__main__":
