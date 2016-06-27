@@ -26,7 +26,7 @@ def parseSchoolDistrictJSON(districtList):
                 if 'boundary' in distrBoundaries.keys():
                     for poly in distrBoundaries['boundary']['coordinates']:
                         pathPoints = []
-                        for (longit, lat) in distrBoundaries['boundary']['coordinates'][0][0]:
+                        for (longit, lat) in poly[0]:
                             pathPoints.append([lat, longit])
                         polygons.append(mplPath.Path(np.array(pathPoints)))
                 elif 'schools' in distrBoundaries.keys():
