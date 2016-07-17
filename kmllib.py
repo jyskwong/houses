@@ -13,6 +13,7 @@ from pykml.factory import KML_ElementMaker as KML
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.path as mplPath
 
 import pandas as pd
 import os
@@ -41,12 +42,35 @@ def newKML():
                     KML.Pair(
                         KML.key("normal"),
                         KML.styleUrl("house_{}".format(colorName))
-                    ),
-                    id="stylemap_house_{}".format(colorName)
-                )
+                    ) )
                 
         doc.append(style)
         doc.append(styleMap)    
+    return doc
+    
+    
+## @fn Add polygon to KML document. 
+# polygon defined as a matplotlib.Path object
+def addPoly(doc, name, mplPath):
+    polyList = KML.MultiGeometry()
+     
+    coordStr = ""
+    for vertex in mplPath.vertices:
+        coordStr += "{},{},0 ".format(vertex[1], vertex[0])
+    polyList.append(
+                KML.Polygon(
+                    KML.outerBoundaryIs(
+                        KML.LinearRing(
+                             KML.coordinates(coordStr)
+                        )                            
+                    )
+                )
+            )
+    polygons = KML.Placemark(
+        KML.name(name),
+        polyList
+        )
+    doc.append(polygons)
     return doc
 
 ## @fn Add points in KML document
@@ -91,6 +115,49 @@ def addPoints(doc, dataframe, latLabel, longLabel, valueLabel, normalize=1, skip
                 doc.append(point)
                 plottedCoord.append(coordStr)
     return doc
+
+## @fn Add points in KML document with a custom color scale
+# bins = a list with 10 entries
+#   a point < bin[0] takes on color0 
+#   else a point < bin[1] takes on color1 
+#   else a point < bin[9] takes on color9 
+#   ... 
+#   else color10
+def addPointsCustom(doc, dataframe, latLabel, longLabel, valueLabel, bins, skipNull=1):
+    if len(dataframe.index) == 0:
+        return doc
+    
+    if (len(bins) != 10):
+        raise ValueError("Expected bins to have 10 entries, got {}".format(len(bins)))
+
+    plottedCoord = []
+    for i in dataframe.index:
+        # get color
+        if pd.isnull(dataframe.loc[i, valueLabel]):
+            colorName = 0
+        else:
+            diff = np.array(bins) - dataframe.loc[i, valueLabel]
+            colorName = 10
+            for (x, d) in enumerate(diff):
+                if d > 0:
+                    colorName = x
+                    break
+    
+        #add placemark to KML
+        if not pd.isnull(dataframe.loc[i, valueLabel]) or skipNull == 0:
+            coordStr = "{} {}".format(dataframe.loc[i, longLabel], dataframe.loc[i, latLabel])
+            if coordStr not in plottedCoord:
+                point = KML.Placemark(
+                   KML.description("{:5f}".format(dataframe.loc[i, valueLabel])),
+                   KML.styleUrl("stylemap_house_{}".format(colorName)),
+                   KML.Point(
+                       KML.coordinates("{},{},0".format(dataframe.loc[i, longLabel],dataframe.loc[i, latLabel]))
+                        )
+                    )
+                doc.append(point)
+                plottedCoord.append(coordStr)
+    return doc
+
     
 def printKML(doc, outfile):
     schema_ogc = Schema("ogckml22.xsd")
@@ -105,5 +172,6 @@ def demo():
     doc = newKML()
     doc = addPoints(doc, data, 'LATITUDE', 'LONGITUDE', 'Median Income', normalize=1, skipNull=0)
     printKML(doc, 'test.kml')
+    
     
     
