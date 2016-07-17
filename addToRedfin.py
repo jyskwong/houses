@@ -19,6 +19,7 @@ import getCensus
 
 REDFIN_SOURCE_PATH = './redfin_source'
 REDFIN_OUT_PATH = './redfin_data'
+colDate = ['LAST SALE DATE']
 
 def main():
     os.system("mkdir -p {}".format(REDFIN_OUT_PATH))
@@ -30,7 +31,7 @@ def main():
     
     for filename in os.listdir(REDFIN_SOURCE_PATH):
         if re.search(r'.csv$', filename):
-            data = pd.read_csv("{}/{}".format(REDFIN_SOURCE_PATH, filename))
+            data = pd.read_csv("{}/{}".format(REDFIN_SOURCE_PATH, filename), parse_dates=colDate, thousands=',')
             data["Elementary"] = pd.Series([""]*len(data.index), index=data.index)
             data["Elementary Rating"] = pd.Series([""]*len(data.index), index=data.index)
             data["Middle"] = pd.Series([""]*len(data.index), index=data.index)
