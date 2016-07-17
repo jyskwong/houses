@@ -34,3 +34,9 @@ def plotSaleToListRatio():
     printKML(doc, 'saleToListRatio.kml')
     return filtered
     
+def testCustomColors():
+    doc = newKML()
+    df = pd.DataFrame(np.abs(np.random.randn(10,3)), columns=['LATITUDE', 'LONGITUDE', 'VALUE'])
+    bins = [0, 0.05, 0.15, 0.3, 0.32, 0.4, 0.5, 0.6, 0.78, 0.9]
+    doc = addPointsCustom(doc, df, 'LATITUDE', 'LONGITUDE', 'VALUE', bins)
+    printKML(doc, 'testCustomColors.kml')
