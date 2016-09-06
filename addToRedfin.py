@@ -17,7 +17,7 @@ import pickle
 import getSchools
 import getCensus
 
-REDFIN_SOURCE_PATH = './redfin_source'
+REDFIN_SOURCE_PATH = './redfin_source/2016-09-05'
 REDFIN_OUT_PATH = './redfin_data'
 colDate = ['LAST SALE DATE']
 
