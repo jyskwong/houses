@@ -127,5 +127,7 @@ results.params / norms
 dfResid = pd.concat([df[['LATITUDE','LONGITUDE']], results.resid], axis=1)
 dfResid.rename(columns={0: 'Residual'}, inplace=True)
 doc = kmllib.newKML()
-doc = kmllib.addPoints(doc, dfResid, 'LATITUDE', 'LONGITUDE', 'Residual')
+binEdges = np.array([2e4, 6e4, 1e5, 1.5e5, 2e5])
+binEdges = np.concatenate((-binEdges[::-1], binEdges))
+doc = kmllib.addPointsCustom(doc, dfResid, 'LATITUDE', 'LONGITUDE', 'Residual', binEdges)
 kmllib.printKML(doc, 'residuals.kml')
