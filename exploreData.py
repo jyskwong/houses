@@ -17,8 +17,8 @@ df = pd.read_pickle('saleData.p')
 df.iloc[:, -8:] = df.iloc[:, -8:].replace('', np.nan)
 
 #%% Filter by school rating
-# Non-null middle school rating (excludes few in Campbell Union school district)
-df = df.ix[df['Middle Rating'].notnull()]
+# Non-null school ratings (excludes few in Campbell Union school district, Palo Alto, San Jose)
+df = df.ix[df['Middle Rating'].notnull() & df['Elementary Rating'].notnull()]
 # Elementary school rating
 df = df.ix[df['Elementary Rating'] > 2]
 

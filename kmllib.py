@@ -42,7 +42,8 @@ def newKML():
                     KML.Pair(
                         KML.key("normal"),
                         KML.styleUrl("house_{}".format(colorName))
-                    ) )
+                    ),
+                    id="stylemap_house_{}".format(colorName))
                 
         doc.append(style)
         doc.append(styleMap)    

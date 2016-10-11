@@ -25,14 +25,19 @@ df = df.ix[df['BATHS'].notnull()]
 df = df.ix[df['SQFT'].notnull()] 
 # Non-null lot size (excludes ~400, more condos than SFRs or townhouses)
 df = df.ix[df['LOT SIZE'].notnull()]
-# Non-null middle school rating (excludes few in Campbell Union school district)
-df = df.ix[df['Middle Rating'].notnull()]
+# Non-null school ratings (excludes few in Campbell Union school district, Palo Alto, San Jose)
+df = df.ix[df['Middle Rating'].notnull() & df['Elementary Rating'].notnull()]
 
 #%% Filter rows based on preferences
 # Number of bedrooms
 df = df.ix[df['BEDS'].isin([2, 3, 4])]
 # Elementary school rating
 df = df.ix[df['Elementary Rating'] > 2]
+
+#%% Change city outliers to neighbouring cities for simplicity
+df.loc[df['CITY'] == 'PALO ALTO', 'CITY'] = 'LOS ALTOS'
+df.loc[df['CITY'] == 'SAN JOSE', 'CITY'] = 'SANTA CLARA'
+df.loc[df['CITY'] == 'Out Of Area', 'CITY'] = 'SANTA CLARA'
 
 #%% Select columns
 #cols = ['HOME TYPE','ADDRESS','CITY','ZIP','BEDS','BATHS','SQFT','LOT SIZE',
@@ -86,9 +91,24 @@ for col in colSel.index:
 X['YEAR BUILT'] = X['LAST SALE DATE'].dt.year - X['YEAR BUILT']
 X.rename(columns={'YEAR BUILT': 'Age At Sale'}, inplace=True)
 # Sale date to time (in years) since earliest sale date
+# Sale date to quarter
 dateMin = X['LAST SALE DATE'].min()
-X['LAST SALE DATE'] = (X['LAST SALE DATE'] - dateMin) / np.timedelta64(1, 'Y')
-X.rename(columns={'LAST SALE DATE': 'Years Since {}'.format(dateMin.date())}, inplace=True)
+#X['LAST SALE DATE'] = (X['LAST SALE DATE'] - dateMin) / np.timedelta64(1, 'Y')
+#X.rename(columns={'LAST SALE DATE': 'Years Since {}'.format(dateMin.date())}, inplace=True)
+dateMax = X['LAST SALE DATE'].max()
+# Quarter boundaries
+dateBins = pd.date_range(dateMin, dateMax, freq='91D')
+dateBins = dateBins.append(pd.DatetimeIndex([dateMax + pd.Timedelta(1,'D')]))
+# Convert sale date to quarter
+X['Sale Quarter'] = 0
+for q in range(len(dateBins) - 1):
+    X.loc[(X['LAST SALE DATE'] >= dateBins[q]) & (X['LAST SALE DATE'] < dateBins[q+1]), 'Sale Quarter'] = q+1
+# Binary-code sale quarter
+Xnew = pd.get_dummies(X['Sale Quarter'], prefix='Sale Quarter', prefix_sep='=')
+Xnew.drop('Sale Quarter={}'.format(len(dateBins)-1), axis=1, inplace=True)
+# Concatenate and drop original columns
+X = pd.concat([X, Xnew], axis=1)
+X.drop(['LAST SALE DATE', 'Sale Quarter'], axis=1, inplace=True)
 
 #%% Feature regressions
 # Square feet on number of bedrooms, bathrooms
